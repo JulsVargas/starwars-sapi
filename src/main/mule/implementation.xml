@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="39bc8c3c-315d-4555-8dec-361e0e4ea811" basePath="${swapi.basepath}" >
+		<http:request-connection host="${swapi.host}" />
+	</http:request-config>
+	<flow name="implementationFlow" doc:id="383db206-6bbb-4bbc-8bdd-fecb446f14ba" >
+		<try doc:name="Try" doc:id="bd35b8ef-8479-4c6a-9fda-21291b12a3a2" >
+			<logger level="INFO" doc:name="Before call swapi" doc:id="75787a74-b20d-4da2-b9be-7fb3f167486d" message="Before call swapi" />
+			<http:request method="GET" doc:name="Request" doc:id="66675942-b46e-46f9-9966-403cbce090a1" config-ref="HTTP_Request_configuration" path="${swapi.path.people}">
+			<http:query-params><![CDATA[#[output application/java
+---
+{
+	"page" : vars.page
+}]]]></http:query-params>
+		</http:request>
+			<logger level="INFO" doc:name="After call swapi" doc:id="f239b0b0-0d12-41b3-a6b9-a36a0573b946" message="#[payload]" />
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="a0eb3297-1944-40fb-a999-67045915eb58" >
+					<logger level="INFO" doc:name="Error with swapi" doc:id="916fd738-52df-4a69-86da-555fd42e6421" message='#["It was an error at page: " ++ vars.page]' />
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<set-variable value='#[output application/json&#10;---&#10;vars.people default [] &#10;++ &#10;if(vars.gender == "")&#10;	payload.results default []&#10;else&#10;	payload.results filter($.gender == vars.gender) default []]' doc:name="Update people" doc:id="d31f9df7-f5aa-46ca-acfa-0b0c5c1eead3" variableName="people" />
+		<choice doc:name="Choice" doc:id="f271c225-6c80-4aad-bef9-9838b7fae13a" >
+			<when expression="#[payload.next != null]">
+				<set-variable value="#[(vars.page as Number) + 1]" doc:name="Set page" doc:id="23480a26-3043-4181-bf2f-5f627463e5af" variableName="page" />
+				<flow-ref doc:name="Recursive call" doc:id="376daf35-80de-4f56-b05d-923a0bac9f6e" name="implementationFlow" />
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Transform to CSV" doc:id="07a9782a-d926-4209-965a-0290f5e2b937">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/csv
+---
+vars.people map() ->
+{
+    "name": $.name,
+    "height": $.height,
+    "mass": $.mass,
+    "hair_color": $.hair_color,
+    "skin_color": $.skin_color,
+    "eye_color": $.eye_color,
+    "birth_year": $.birth_year,
+    "gender": $.gender
+}
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="#[if(sizeOf(vars.people) &gt; 0)&#10;	200&#10;else&#10;	404]" doc:name="Set Variable" doc:id="3248b715-80ab-4692-8b55-16fb97a615da" variableName="httpStatus" />
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

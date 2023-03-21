@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="8eec71f1-3f6c-488c-816c-1d0ffd93f50f" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:listener-config name="HTTPS_Listener_config" doc:name="HTTPS Listener config" doc:id="f3d2a758-e8c4-4aeb-b29f-44b308c2690a" >
+		<http:listener-connection protocol="HTTPS" host="0.0.0.0" port="${listener.https.port}" readTimeout="60000">
+			<tls:context >
+				<tls:key-store type="jks" path="${keystore.path}" alias="${keystore.alias}" keyPassword="${secure::keystore.password}" password="${secure::keystore.key-password}" />
+			</tls:context>
+		</http:listener-connection>
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="8663e068-41e5-4fc7-b263-528d31340744" file="config/${mule.env}-properties.yaml" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="50d61e67-c5fa-424f-b207-6d433a8eb18d" file="config/${mule.env}-properties.yaml" key="${encryption.key}" />
+	<global-property doc:name="Global Property" doc:id="a81f1820-8de4-4d90-9a44-b84e99f1fdea" name="mule.env" value="qa" />
+	<global-property doc:name="Global Property" doc:id="a4153342-9a18-4c86-a466-dc6e4d184d8a" name="encryption.key" value="#@mulesoft-123-jvstarwars-456#@$" />
+	<apikit:config outboundHeadersMapName="outboundHeadersMapName" httpStatusVarName="httpStatus" doc:name="Router" doc:id="4c9b7aa2-c780-4d97-983e-c01aedfa7f0c" name="router-config" api="api\api.raml" />
+	<ee:object-store-caching-strategy name="Caching_Strategy" doc:name="Caching Strategy" doc:id="cf244204-949e-4dc4-ba1f-ce12e028d078" keyGenerationExpression="#[vars.gender]">
+		<os:private-object-store alias="Gender" entryTtl="${cache.ttlInMin}" entryTtlUnit="MINUTES" expirationInterval="${cache.ttlInMin}" />		
+	</ee:object-store-caching-strategy>
+</mule>

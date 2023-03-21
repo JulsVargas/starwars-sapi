@@ -1,0 +1,20 @@
+listener:
+  host: "0.0.0.0"
+  https:
+    port: "8082"
+keystore:
+  path: "keystore/keystore.jks"
+  alias: "mule"
+  type: "jks"
+  password: "![1yV+8waLf6wwimDlQgzgcg==]"
+  key-password: "![1yV+8waLf6wwimDlQgzgcg==]"
+  
+swapi:
+  host: "swapi.dev"
+  basepath: "/api"
+  path:
+    people: "/people"
+    
+cache:
+  ttlInMin: "3"
+  

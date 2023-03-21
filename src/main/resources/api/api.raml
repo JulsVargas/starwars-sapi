@@ -1,0 +1,33 @@
+#%RAML 1.0
+#============================================================
+# RAML
+# api.raml
+# Date    : 16/Mar/2023
+# Author  : Julio Vargas
+# History:
+#
+#   Ver Who Date      Description
+#   001 jv  16-03-23  Initial version
+#============================================================
+
+title: test-starwars-sapi
+protocols: [HTTPS]
+mediaType: [application/json]
+version: v1
+
+/people:
+  get:
+    description: Get starwars people from swapi. Optional get filtered people by genre
+    queryParameters:
+      gender:
+        description: Character gender
+        type: string
+        required: false    
+    responses:
+      200:
+        body:
+          application/csv:
+            example: !include examples/response-example.csv
+       
+
+
